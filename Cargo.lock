@@ -129,6 +129,7 @@ dependencies = [
  "postgres",
  "reqwest",
  "serde",
+ "serde_json",
  "tokio",
 ]
 

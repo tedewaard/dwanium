@@ -1,11 +1,12 @@
-use tanium::test_api_call;
+use tanium::{tanium_api_call};
 
 mod tanium;
 mod database;
 mod dell;
+mod token;
 
 
 
 fn main() {
-    test_api_call();
+    tanium_api_call();
 }
