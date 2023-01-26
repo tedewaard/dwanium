@@ -1,4 +1,4 @@
-use tanium::{get_pages};
+use tanium::{print_computers};
 
 mod tanium;
 mod database;
@@ -9,5 +9,6 @@ mod token;
 
 fn main() {
     //tanium_api_call();
-    get_pages();
+    //get_pages();
+    print_computers();
 }

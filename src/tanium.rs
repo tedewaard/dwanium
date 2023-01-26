@@ -43,6 +43,7 @@ struct TaniumPageInfo {
     end_cursor: String,
 }
 
+#[derive(Debug)]
 struct Computer {
     name: String,
     serial_number: String,
@@ -69,80 +70,66 @@ async fn tanium_api_call(query: String) -> Result<TaniumResponse, Error> {
     Ok(tanium_response)
 }
 
-
-pub fn get_pages() {
+fn format_query(end_cursor: String) -> String {
     let query_start: &str = r#"{
     "query": "{ endpoints ("#;
     let query_end: &str = r#"filter: {path: \"manufacturer\", op: CONTAINS, value: \"Dell\" }) { edges { node { id serialNumber name model manufacturer } } pageInfo { hasNextPage endCursor } }}"
     }"#;
+    let end_cursor_string = format!("after: \\\"{}\\\" ", end_cursor); 
+    let query = query_start.to_owned() + &end_cursor_string + query_end;
+    return query
+}
 
+
+fn get_pages() -> Vec<TaniumResponse>{
+    let mut all_responses: Vec<TaniumResponse> = Vec::new();
     let base_query: String = r#"{
     "query": "{ endpoints (filter: {path: \"manufacturer\", op: CONTAINS, value: \"Dell\" }) { edges { node { id serialNumber name model manufacturer } } pageInfo { hasNextPage endCursor } }}" 
     }"#.to_string();
-    let mut end_cursor = ""; 
-    let end_cursor_string = format!("after: \"{}\" ", end_cursor); 
-    let query = query_start.to_owned() + &end_cursor_string + query_end;
-    println!("{}", base_query);
-    println!("{}", query);
 
     let base_call = tanium_api_call(base_query.to_string());
     let base_result = match base_call {
         Ok(r) => r,
         Err(error) => panic!("Problem with the Tanium API response: {}", error)
     }; 
+    
 
-    println!("{:?}", base_result);
+    all_responses.push(base_result);
 
-    end_cursor = &base_result.data.endpoints.page_info.end_cursor;
-    let next_page = &base_result.data.endpoints.page_info.has_next_page;
+    let mut end_cursor = &all_responses[0].data.endpoints.page_info.end_cursor;
+    let mut next_page = &all_responses[0].data.endpoints.page_info.has_next_page;
 
     while *next_page {
+        let query = format_query(end_cursor.clone());
         match tanium_api_call(query.clone()) {
-            Ok(r) => println!("{:?}", r),
+            Ok(r) => {println!("{:?}", r);
+                all_responses.push(r);
+                end_cursor = &all_responses.last().unwrap().data.endpoints.page_info.end_cursor;
+                next_page = &all_responses.last().unwrap().data.endpoints.page_info.has_next_page},
             Err(error) => panic!("{}", error)
         }
     }
-    
 
     //next_page = tanium_response.data.endpoints.page_info.has_next_page;
-    //let mut next_page = true;
+    return all_responses;
 
 }
 
-
-
-
-
-fn parse_response(response: TaniumResponse) -> Vec<Computer> {
+fn parse_responses(responses: Vec<TaniumResponse>) -> Vec<Computer> {
     let mut computers: Vec<Computer> = Vec::new(); 
     
-    
+    for response in responses {
+        for edges in response.data.endpoints.edges {
+            let comp = Computer {name: edges.node.name, serial_number: edges.node.serial_number};
+            computers.push(comp);
+        }
+    }
 
     return computers
 }
 
-
-
-/*
-#[derive(Deserialize)]
-struct CatFact {
-    fact: String,
+pub fn print_computers() {
+    let responses = get_pages();
+    let computers = parse_responses(responses);
+    println!("{:?}", computers);
 }
-
-
-#[tokio::main]
-pub async fn test_api_call() {
-    let url = "https://catfact.ninja/fact";
-    let mut facts: Vec<CatFact> = Vec::new();
-
-    let mut i = 0; 
-    while i < 10 {
-        let response = reqwest::get(url).await.unwrap();
-        let fact: CatFact = response.json().await.unwrap();
-        facts.push(fact);
-        i += 1;
-    }
-
-    println!("{:?}", facts.into_iter().map(|x| x.fact).collect::<Vec<String>>());
-}
-*/
