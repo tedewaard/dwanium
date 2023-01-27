@@ -1,6 +1,5 @@
 use serde::Deserialize;
-use reqwest::{self, ClientBuilder, Error, header::{CONTENT_TYPE, AUTHORIZATION}};
-use serde_json::{json, Value as JsonValue};
+use reqwest::{self, ClientBuilder, Error, header::CONTENT_TYPE};
 use crate::token::TOKEN;
 
 #[derive(Deserialize, Debug)]
@@ -27,12 +26,12 @@ struct TaniumEdges {
 
 #[derive(Deserialize, Debug)]
 struct TaniumNodes{
-    id: String,
+    //id: String,
     #[serde(alias="serialNumber")]
     serial_number: String,
     name: String,
-    model: String,
-    manufacturer: String
+   // model: String,
+    //manufacturer: String
 }
 
 #[derive(Deserialize, Debug)]
@@ -44,9 +43,9 @@ struct TaniumPageInfo {
 }
 
 #[derive(Debug)]
-struct Computer {
-    name: String,
-    serial_number: String,
+pub struct Computer {
+    pub name: String,
+    pub serial_number: String,
 }
 
 
@@ -72,7 +71,7 @@ async fn tanium_api_call(query: String) -> Result<TaniumResponse, Error> {
 
 fn format_query(end_cursor: String) -> String {
     let query_start: &str = r#"{
-    "query": "{ endpoints ("#;
+    "query": "{ endpoints (first: 1000, "#;
     let query_end: &str = r#"filter: {path: \"manufacturer\", op: CONTAINS, value: \"Dell\" }) { edges { node { id serialNumber name model manufacturer } } pageInfo { hasNextPage endCursor } }}"
     }"#;
     let end_cursor_string = format!("after: \\\"{}\\\" ", end_cursor); 
@@ -84,7 +83,7 @@ fn format_query(end_cursor: String) -> String {
 fn get_pages() -> Vec<TaniumResponse>{
     let mut all_responses: Vec<TaniumResponse> = Vec::new();
     let base_query: String = r#"{
-    "query": "{ endpoints (filter: {path: \"manufacturer\", op: CONTAINS, value: \"Dell\" }) { edges { node { id serialNumber name model manufacturer } } pageInfo { hasNextPage endCursor } }}" 
+    "query": "{ endpoints (first: 1000, filter: {path: \"manufacturer\", op: CONTAINS, value: \"Dell\" }) { edges { node { id serialNumber name model manufacturer } } pageInfo { hasNextPage endCursor } }}" 
     }"#.to_string();
 
     let base_call = tanium_api_call(base_query.to_string());
@@ -102,7 +101,7 @@ fn get_pages() -> Vec<TaniumResponse>{
     while *next_page {
         let query = format_query(end_cursor.clone());
         match tanium_api_call(query.clone()) {
-            Ok(r) => {println!("{:?}", r);
+            Ok(r) => {
                 all_responses.push(r);
                 end_cursor = &all_responses.last().unwrap().data.endpoints.page_info.end_cursor;
                 next_page = &all_responses.last().unwrap().data.endpoints.page_info.has_next_page},
@@ -115,7 +114,7 @@ fn get_pages() -> Vec<TaniumResponse>{
 
 }
 
-fn parse_responses(responses: Vec<TaniumResponse>) -> Vec<Computer> {
+pub fn parse_responses(responses: Vec<TaniumResponse>) -> Vec<Computer> {
     let mut computers: Vec<Computer> = Vec::new(); 
     
     for response in responses {
@@ -128,8 +127,16 @@ fn parse_responses(responses: Vec<TaniumResponse>) -> Vec<Computer> {
     return computers
 }
 
-pub fn print_computers() {
+pub fn get_computers() -> Vec<Computer> {
     let responses = get_pages();
     let computers = parse_responses(responses);
-    println!("{:?}", computers);
+
+    /*
+    for computer in computers.iter() {
+    println!("{}", &computer.name);
+    println!("{}", &computer.serial_number);
+    }
+    println!("{:?}", &computers.len());
+    */
+    return computers
 }
