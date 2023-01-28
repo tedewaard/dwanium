@@ -1,4 +1,5 @@
-use database::add_computers_db;
+use database::{add_computers_db, query_table};
+use dell::{trial_run, dell_api_query};
 use tanium::get_computers;
 
 mod tanium;
@@ -8,10 +9,15 @@ mod token;
 
 
 
+
 fn main() {
-    //tanium_api_call();
-    //get_pages();
-    //print_computers();
+    /* Below querys Tanium and adds computers to DB
     let computers = get_computers();
     add_computers_db(computers);
+    */
+
+
+    //query_table();
+    dell_api_query().unwrap(); 
+
 }

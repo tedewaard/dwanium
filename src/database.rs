@@ -25,13 +25,14 @@ fn add_test_entrys(client: &mut Client) {
 }
 
 
-fn query_table(client: &mut Client) {
+pub fn query_table() {
+    let mut client = setup_client().unwrap();
     for row in client.query("SELECT serial, name, end_date FROM computers", &[]).unwrap() {
         let serial: &str = row.get(0);
         let name: &str = row.get(1);
-        let end_date: &str = row.get(2);
+        //let end_date: &str = row.get(2);
 
-        println!("found entry: {} {} {}", serial, name, end_date);
+        println!("found entry: {} {}", serial, name);
     }
 }
 
@@ -54,9 +55,3 @@ fn add_record(client: &mut Client, serial: String, name: String) {
     }
 }
 
-pub fn run() {
-    let mut client = setup_client().unwrap();
-    //add_test_entrys(&mut client);
-
-    query_table(&mut client);
-}
