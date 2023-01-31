@@ -1,6 +1,5 @@
-use database::{add_computers_db, query_table};
-use dell::{trial_run, dell_api_query};
-use tanium::get_computers;
+use dell::dell_api_query;
+use database::query_serialnum;
 
 mod tanium;
 mod database;
@@ -11,13 +10,11 @@ mod token;
 
 
 fn main() {
-    /* Below querys Tanium and adds computers to DB
-    let computers = get_computers();
-    add_computers_db(computers);
-    */
+    let serial_nums = query_serialnum();
+    for serial in serial_nums {
+        let pc_info = dell_api_query(serial).unwrap();        
+        println!("{:?}", pc_info)
+    }
 
-
-    //query_table();
-    dell_api_query().unwrap(); 
-
+    
 }

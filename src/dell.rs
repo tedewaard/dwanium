@@ -1,10 +1,29 @@
 use serde::Deserialize;
-use reqwest::{self, ClientBuilder, Error, header::{CONTENT_TYPE, AUTHORIZATION}};
+use reqwest::{self, ClientBuilder, Error, header::{CONTENT_TYPE, AUTHORIZATION, ACCEPT}};
 use crate::token::*;
 
 #[derive(Deserialize, Debug)]
-pub struct BearerToken{
+struct BearerToken{
     access_token: String
+}
+
+pub type DellResult = Vec<DellObject>;
+
+#[derive(Deserialize, Debug)]
+pub struct DellObject {
+    #[serde(alias="serviceTag")]
+    service_tag: String,
+    #[serde(alias="shipDate")]
+    ship_date: String,
+    entitlements: Vec<DellEntitlements>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct DellEntitlements {
+    #[serde(alias="startDate")]
+    start_date: String,
+    #[serde(alias="endDate")]
+    end_date: String,
 }
 
 async fn get_dell_bearer_token() -> Result<BearerToken, Error> {
@@ -27,30 +46,23 @@ async fn get_dell_bearer_token() -> Result<BearerToken, Error> {
 }
 
 
-pub async fn trial_run() {
-    let token = get_dell_bearer_token().await.unwrap();
-    println!("{:?}", token.access_token);
-}
-
 #[tokio::main]
-pub async fn dell_api_query() -> Result<(), Error> {
+pub async fn dell_api_query(serial_number: String) -> Result<DellResult, Error> {
 
-    let params = [("servicetags", "btchnn3")];
+    let params = [("servicetags", serial_number)];
     let bearer_token = get_dell_bearer_token().await.unwrap().access_token;
     let token = format!("Bearer {}", bearer_token);
-    let base_url = "https://apigtwb2c.us.dell.com/PROD/sbil/eapi/v5/assets".to_string();
+    let base_url = "https://apigtwb2c.us.dell.com/PROD/sbil/eapi/v5/asset-entitlements".to_string();
     let client = ClientBuilder::new().build().unwrap();
     let response = client
-        .post(base_url)
+        .get(base_url)
         .header(AUTHORIZATION, token)
-        .form(&params)
+        .query(&params)
         .send()
-        .await?
-        .text()
         .await?;
 
-    //let pc_info = response.json().await?;
-    print!("{:?}", response);
+    let dell_info: DellResult = response.json().await?;
+    //print!("{:?}", response);
 
-    Ok(())
+    Ok(dell_info)
 }

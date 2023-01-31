@@ -36,6 +36,16 @@ pub fn query_table() {
     }
 }
 
+pub fn query_serialnum() -> Vec<String> {
+    let mut serial_numbers = Vec::new();
+    let mut client = setup_client().unwrap();
+    for row in client.query("SELECT serial, name, end_date FROM computers", &[]).unwrap() {
+        let serial: &str = row.get(0);
+        serial_numbers.push(serial.to_string());
+    }
+    return serial_numbers;
+}
+
 pub fn add_computers_db(computers: Vec<Computer>) {
     let mut client = setup_client().unwrap();
     for computer in computers {
