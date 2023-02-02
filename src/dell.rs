@@ -1,6 +1,6 @@
 use serde::Deserialize;
-use reqwest::{self, ClientBuilder, Error, header::{CONTENT_TYPE, AUTHORIZATION, ACCEPT}};
-use crate::token::*;
+use reqwest::{self, Request, ClientBuilder, Error, header::{CONTENT_TYPE, AUTHORIZATION}};
+use crate::{token::*, tanium::Computer};
 
 #[derive(Deserialize, Debug)]
 struct BearerToken{
@@ -47,22 +47,45 @@ async fn get_dell_bearer_token() -> Result<BearerToken, Error> {
 
 
 #[tokio::main]
-pub async fn dell_api_query(serial_number: String) -> Result<DellResult, Error> {
+pub async fn dell_api_query(serial_number: Vec<String>) -> Result<DellResult, Error>{
 
-    let params = [("servicetags", serial_number)];
+    let mut query_string = "servicetags=".to_string();
+    let mut serial_string = String::new();
+    if serial_number.len() == 1 {
+        serial_string = serial_number.first().unwrap().to_string();
+    } else if serial_number.len() > 1 {
+        serial_string = serial_number.first().unwrap().to_string();
+        for i in 1..serial_number.len() {
+            serial_string = format!("{},{}", serial_string, serial_number[i]);
+        }
+    }
+    query_string = format!("{}{}", query_string, serial_string);
+    println!("{}", query_string);
     let bearer_token = get_dell_bearer_token().await.unwrap().access_token;
     let token = format!("Bearer {}", bearer_token);
-    let base_url = "https://apigtwb2c.us.dell.com/PROD/sbil/eapi/v5/asset-entitlements".to_string();
+    let base_url = format!("https://apigtwb2c.us.dell.com/PROD/sbil/eapi/v5/asset-entitlements?{}", query_string);
     let client = ClientBuilder::new().build().unwrap();
     let response = client
         .get(base_url)
         .header(AUTHORIZATION, token)
-        .query(&params)
+        //.query(&params)
+        //.build();
         .send()
         .await?;
 
     let dell_info: DellResult = response.json().await?;
-    //print!("{:?}", response);
+    //println!("{:?}", response);
 
     Ok(dell_info)
+}
+
+pub fn map_to_serial_and_enddate(dell_result: DellResult) -> Vec<(String,String)> {
+    let mut computers = Vec::new();
+    for object in dell_result {
+        //The fact that there are somtimes multiple entitlements could be a problem
+        //I'm going to just grab the first one for now hence the [0]
+        let computer = (object.service_tag.to_owned(), object.entitlements[0].end_date.to_owned());
+        computers.push(computer);
+    }
+    return computers;
 }

@@ -24,18 +24,6 @@ fn add_test_entrys(client: &mut Client) {
     }
 }
 
-
-pub fn query_table() {
-    let mut client = setup_client().unwrap();
-    for row in client.query("SELECT serial, name, end_date FROM computers", &[]).unwrap() {
-        let serial: &str = row.get(0);
-        let name: &str = row.get(1);
-        //let end_date: &str = row.get(2);
-
-        println!("found entry: {} {}", serial, name);
-    }
-}
-
 pub fn query_serialnum() -> Vec<String> {
     let mut serial_numbers = Vec::new();
     let mut client = setup_client().unwrap();
@@ -61,6 +49,24 @@ fn add_record(client: &mut Client, serial: String, name: String) {
 
     match execute {
         Err(error) => println!("Error inserting record: {}", error),
+        _ => ()
+    }
+}
+
+pub fn update_computer_db(computers: Vec<(String, String)>) {
+    let mut client = setup_client().unwrap();
+    for computer in computers {
+       update_record(&mut client, computer.0, computer.1);
+    }
+}
+
+fn update_record(client: &mut Client, serial: String, end_date: String) {
+    let execute = client.execute(
+        "UPDATE computers SET end_date = $1 WHERE serial = $2",
+        &[&end_date, &serial],
+        );
+    match execute {
+        Err(error) => println!("Error updating record: {}", error),
         _ => ()
     }
 }

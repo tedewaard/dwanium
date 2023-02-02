@@ -1,5 +1,6 @@
-use dell::dell_api_query;
-use database::query_serialnum;
+use dell::{dell_api_query, map_to_serial_and_enddate};
+use database::{query_serialnum, update_computer_db};
+
 
 mod tanium;
 mod database;
@@ -7,14 +8,22 @@ mod dell;
 mod token;
 
 
-
+/* 
+ * Function that breaks up into 100 chunks and then calls the dell dell api
+ * Takes results of the api call and then adds to database
+ */
 
 fn main() {
     let serial_nums = query_serialnum();
+    let mut temp_serial = Vec::new();
     for serial in serial_nums {
-        let pc_info = dell_api_query(serial).unwrap();        
-        println!("{:?}", pc_info)
+        if temp_serial.len() == 100 {
+            let dell_api_results = dell_api_query(temp_serial).unwrap();
+            println!("{:?}", dell_api_results);
+            let updates = map_to_serial_and_enddate(dell_api_results);
+            update_computer_db(updates);
+            temp_serial = Vec::new();
+        }
+        temp_serial.push(serial);
     }
-
-    
 }
