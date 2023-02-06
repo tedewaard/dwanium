@@ -84,8 +84,10 @@ pub fn map_to_serial_and_enddate(dell_result: DellResult) -> Vec<(String,String)
     for object in dell_result {
         //The fact that there are somtimes multiple entitlements could be a problem
         //I'm going to just grab the first one for now hence the [0]
-        let computer = (object.service_tag.to_owned(), object.entitlements[0].end_date.to_owned());
-        computers.push(computer);
+        if object.entitlements.len() > 0 {
+            let computer = (object.service_tag.to_owned(), object.entitlements[0].end_date.to_owned());
+            computers.push(computer);
+        }
     }
     return computers;
 }
