@@ -1,5 +1,6 @@
 use dell::{dell_api_query, map_to_serial_and_enddate};
-use database::{query_serialnum, update_computer_db};
+use database::{query_serialnum, update_computer_db, add_computers_db};
+use tanium::get_computers;
 
 
 mod tanium;
@@ -14,6 +15,12 @@ mod token;
  */
 
 fn main() {
+
+    //Querying Tanium for all Dell Endpoints and add to DB
+    let computers = get_computers();
+    add_computers_db(computers);
+
+    //Reading from DB and querying Dell
     let serial_nums = query_serialnum();
     let mut temp_serial = Vec::new();
     for serial in serial_nums {

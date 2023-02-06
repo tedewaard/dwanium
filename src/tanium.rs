@@ -89,7 +89,7 @@ fn get_pages() -> Vec<TaniumResponse>{
     let base_call = tanium_api_call(base_query.to_string());
     let base_result = match base_call {
         Ok(r) => r,
-        Err(error) => panic!("Problem with the Tanium API response: {}", error)
+        Err(error) => panic!("Problem with the Tanium API response. Check that the API token is valid: {}", error)
     }; 
     
 
@@ -114,7 +114,7 @@ fn get_pages() -> Vec<TaniumResponse>{
 
 }
 
-pub fn parse_responses(responses: Vec<TaniumResponse>) -> Vec<Computer> {
+fn parse_responses(responses: Vec<TaniumResponse>) -> Vec<Computer> {
     let mut computers: Vec<Computer> = Vec::new(); 
     
     for response in responses {
@@ -130,13 +130,5 @@ pub fn parse_responses(responses: Vec<TaniumResponse>) -> Vec<Computer> {
 pub fn get_computers() -> Vec<Computer> {
     let responses = get_pages();
     let computers = parse_responses(responses);
-
-    /*
-    for computer in computers.iter() {
-    println!("{}", &computer.name);
-    println!("{}", &computer.serial_number);
-    }
-    println!("{:?}", &computers.len());
-    */
     return computers
 }

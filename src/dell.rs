@@ -14,8 +14,8 @@ pub struct DellObject {
     #[serde(alias="serviceTag")]
     service_tag: String,
     #[serde(alias="shipDate")]
-    ship_date: String,
-    entitlements: Vec<DellEntitlements>,
+    ship_date: Option<String>,
+    entitlements: Option<Vec<DellEntitlements>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -82,11 +82,16 @@ pub async fn dell_api_query(serial_number: Vec<String>) -> Result<DellResult, Er
 pub fn map_to_serial_and_enddate(dell_result: DellResult) -> Vec<(String,String)> {
     let mut computers = Vec::new();
     for object in dell_result {
-        //The fact that there are somtimes multiple entitlements could be a problem
-        //I'm going to just grab the first one for now hence the [0]
-        if object.entitlements.len() > 0 {
-            let computer = (object.service_tag.to_owned(), object.entitlements[0].end_date.to_owned());
-            computers.push(computer);
+        //Going to skip objects that don't have entitlements and therefor no end data
+        if object.entitlements.is_some() { 
+                //The fact that there are somtimes multiple entitlements could be a problem
+                //I'm going to just grab the first one for now hence the [0]
+                let entitlements = object.entitlements.expect("No Dell entitlements for object.");
+                if entitlements.len() > 0 {
+                let computer = (object.service_tag.to_owned(),
+                    entitlements[0].end_date[0..10].to_owned().to_string());
+                computers.push(computer);
+            }
         }
     }
     return computers;
