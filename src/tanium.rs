@@ -41,7 +41,7 @@ struct TaniumPageInfo {
     end_cursor: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Computer {
     pub name: String,
     pub serial_number: String,

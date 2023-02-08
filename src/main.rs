@@ -3,6 +3,8 @@ use database::{query_serialnum, update_computer_db, add_computers_db};
 use tanium::get_computers;
 use dotenv::dotenv;
 use std::time::*;
+use std::thread;
+
 
 
 mod tanium;
@@ -17,8 +19,16 @@ fn main() {
 
     //Querying Tanium for all Dell Endpoints and add to DB
     println!("Querying Tanium...");
-    let computers = get_computers();
+    let mut computers = get_computers();
+    println!("Elapsed Time: {:.2?}", before.elapsed());
+
+    let second = computers.split_off(computers.len()/2);
+    let handle = thread::spawn(|| {
+        add_computers_db(second);
+    });
     add_computers_db(computers);
+    handle.join().unwrap();
+    println!("Elapsed Time: {:.2?}", before.elapsed());
 
     //Reading from DB and querying Dell
     let serial_nums = query_serialnum();

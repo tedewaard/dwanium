@@ -1,9 +1,6 @@
 I can query dell faster by dividing the PCs in half and then creating a thread
 for each.
 
-Need to figure out how to handle dell and tanium tokens. Use a config file or
-environment variables?
-
 Proper logging
 
 Run on a schedule that can check for new PCs
