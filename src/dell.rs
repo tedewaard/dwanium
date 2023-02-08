@@ -1,6 +1,5 @@
 use serde::Deserialize;
-use reqwest::{self, Request, ClientBuilder, Error, header::{CONTENT_TYPE, AUTHORIZATION}};
-use crate::{token::*, tanium::Computer};
+use reqwest::{self, ClientBuilder, Error, header::{CONTENT_TYPE, AUTHORIZATION}};
 
 #[derive(Deserialize, Debug)]
 struct BearerToken{
@@ -27,11 +26,12 @@ pub struct DellEntitlements {
 }
 
 async fn get_dell_bearer_token() -> Result<BearerToken, Error> {
-
+    let dell_id = dotenv::var("DELL_ID").expect("Error reading dell id env variable.");
+    let dell_secret = dotenv::var("DELL_SECRET").expect("Error reading dell secret env variable.");
     let base_url = "https://apigtwb2c.us.dell.com/auth/oauth/v2/token".to_string();
-    let body = [("client_id", DELL_ID),
-        ("client_secret", DELL_SECRET),
-        ("grant_type", "client_credentials")];
+    let body = [("client_id", dell_id),
+        ("client_secret", dell_secret.to_string()),
+        ("grant_type", "client_credentials".to_string())];
     let client = ClientBuilder::new().build().unwrap();
     let response = client
         .post(base_url)
@@ -60,7 +60,7 @@ pub async fn dell_api_query(serial_number: Vec<String>) -> Result<DellResult, Er
         }
     }
     query_string = format!("{}{}", query_string, serial_string);
-    println!("{}", query_string);
+    //println!("{}", query_string);
     let bearer_token = get_dell_bearer_token().await.unwrap().access_token;
     let token = format!("Bearer {}", bearer_token);
     let base_url = format!("https://apigtwb2c.us.dell.com/PROD/sbil/eapi/v5/asset-entitlements?{}", query_string);

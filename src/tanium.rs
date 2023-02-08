@@ -1,6 +1,5 @@
 use serde::Deserialize;
 use reqwest::{self, ClientBuilder, Error, header::CONTENT_TYPE};
-use crate::token::TOKEN;
 
 #[derive(Deserialize, Debug)]
 pub struct TaniumResponse {
@@ -51,13 +50,14 @@ pub struct Computer {
 
 #[tokio::main]
 async fn tanium_api_call(query: String) -> Result<TaniumResponse, Error> {
-
+    //dotenv().ok();
+    let token = dotenv::var("TOKEN").expect("There was an issue reading the tanium token env variable.");
     let base_url = "https://hm-api.cloud.tanium.com/plugin/products/gateway/graphql".to_string();
     let client = ClientBuilder::new().build().unwrap();
     let response = client
         .post(base_url)
         .header(CONTENT_TYPE, "application/json")
-        .header("session", TOKEN)
+        .header("session", token)
         .body(query)
         .send()
         .await?;
