@@ -37,7 +37,9 @@ pub fn query_serialnum() -> Vec<String> {
 pub fn add_computers_db(computers: Vec<Computer>) {
     let mut client = setup_client().unwrap();
     for computer in computers {
-       add_record(&mut client, computer.serial_number, computer.name);
+        if computer.serial_number.len() == 7 {
+            add_record(&mut client, computer.serial_number, computer.name);
+        }
     }
 }
 
