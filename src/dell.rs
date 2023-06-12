@@ -1,5 +1,7 @@
+
 use serde::Deserialize;
 use reqwest::{self, ClientBuilder, Error, header::{CONTENT_TYPE, AUTHORIZATION}};
+use chrono::DateTime;
 
 #[derive(Deserialize, Debug)]
 struct BearerToken{
@@ -17,6 +19,7 @@ pub struct DellObject {
     entitlements: Option<Vec<DellEntitlements>>,
 }
 
+//There is a serviceLevelDescription field that I'm not grabbbing but describest the warranty
 #[derive(Deserialize, Debug)]
 pub struct DellEntitlements {
     #[serde(alias="startDate")]
@@ -84,12 +87,23 @@ pub fn map_to_serial_and_enddate(dell_result: DellResult) -> Vec<(String,String)
     for object in dell_result {
         //Going to skip objects that don't have entitlements and therefor no end data
         if object.entitlements.is_some() { 
-                //The fact that there are somtimes multiple entitlements could be a problem
-                //I'm going to just grab the first one for now hence the [0]
-                let entitlements = object.entitlements.expect("No Dell entitlements for object.");
-                if entitlements.len() > 0 {
+            //Some computers have multiple entitlements. We are grabbing the latest date.
+            let entitlements = object.entitlements.expect("No Dell entitlements for object.");
+            let mut dates = Vec::new();
+            for entitlement in entitlements {
+                let date = DateTime::parse_from_rfc3339(&entitlement.end_date);
+                match date {
+                    Ok(date) => dates.push(date),
+                    Err(err) => println!("Failed to parse date. Err: {}", err),
+                }
+            }
+            dates.sort();
+            let latest_date = dates.pop(); 
+
+            if latest_date.is_some() {
+                let short_date = latest_date.expect("There is no latest date.").to_string();
                 let computer = (object.service_tag.to_owned(),
-                    entitlements[0].end_date[0..10].to_owned().to_string());
+                short_date[0..10].to_string());
                 computers.push(computer);
             }
         }

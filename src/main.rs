@@ -17,6 +17,7 @@ fn main() {
     //Load environment variables
     dotenv().ok();
 
+    /*
     //Querying Tanium for all Dell Endpoints and add to DB
     println!("Querying Tanium...");
     let computers = get_computers();
@@ -25,6 +26,7 @@ fn main() {
     println!("Adding computers to db...");
     add_computers_db(computers);
     println!("Elapsed Time: {:.2?}", before.elapsed());
+    */
 
     //Reading from DB and querying Dell
     let serial_nums = query_serialnum();
