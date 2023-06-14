@@ -1,3 +1,5 @@
+use std::println;
+
 use postgres::{Client, NoTls, Error};
 use crate::tanium::Computer;
 
@@ -54,6 +56,33 @@ fn add_record(client: &mut Client, serial: String, name: String) {
         _ => ()
     }
 }
+
+pub fn mass_add_computers_db(computers: Vec<Computer>) {
+    //let mut client = setup_client().unwrap();
+    let mut insert_query = String::new();
+    for computer in computers {
+        if computer.serial_number.len() == 7 {
+            //Create String
+            let temp_string = format!("('{}', '{}')", computer.serial_number, computer.name);
+            insert_query = format!("{}, {}", &insert_query, temp_string);
+            //mass_add_record(&mut client, &insert_query);
+        }
+    }
+    println!("{}", insert_query);
+}
+
+fn mass_add_record(client: &mut Client, query: &String) { 
+    let execute = client.execute(
+        "INSERT INTO computers (serial, name) VALUES $1",
+        &[&query],
+    );
+
+    match execute {
+        Err(error) => println!("Error inserting record: {}", error),
+        _ => ()
+    }
+}
+
 
 pub fn update_computer_db(computers: Vec<(String, String)>) {
     let mut client = setup_client().unwrap();

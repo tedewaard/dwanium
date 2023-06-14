@@ -1,5 +1,5 @@
 use dell::{dell_api_query, map_to_serial_and_enddate};
-use database::{query_serialnum, update_computer_db, add_computers_db};
+use database::{query_serialnum, update_computer_db, mass_add_computers_db, add_computers_db};
 use tanium::get_computers;
 use dotenv::dotenv;
 use std::time::*;
@@ -17,7 +17,6 @@ fn main() {
     //Load environment variables
     dotenv().ok();
 
-    /*
     //Querying Tanium for all Dell Endpoints and add to DB
     println!("Querying Tanium...");
     let computers = get_computers();
@@ -26,8 +25,8 @@ fn main() {
     println!("Adding computers to db...");
     add_computers_db(computers);
     println!("Elapsed Time: {:.2?}", before.elapsed());
-    */
 
+    /*
     //Reading from DB and querying Dell
     let serial_nums = query_serialnum();
     let mut temp_serial = Vec::new();
@@ -43,4 +42,5 @@ fn main() {
         temp_serial.push(serial.to_string());
     }
     println!("Elapsed Time: {:.2?}", before.elapsed());
+    */
 }

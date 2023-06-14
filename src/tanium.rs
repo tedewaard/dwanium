@@ -1,5 +1,6 @@
 use serde::Deserialize;
 use reqwest::{self, ClientBuilder, Error, header::CONTENT_TYPE};
+use std::collections::HashSet;
 
 #[derive(Deserialize, Debug)]
 pub struct TaniumResponse {
@@ -116,7 +117,7 @@ fn get_pages() -> Vec<TaniumResponse>{
 
 fn parse_responses(responses: Vec<TaniumResponse>) -> Vec<Computer> {
     let mut computers: Vec<Computer> = Vec::new(); 
-    
+    let mut unique_computers = HashSet::new();
     for response in responses {
         for edges in response.data.endpoints.edges {
             let comp = Computer {name: edges.node.name, serial_number: edges.node.serial_number};
@@ -124,7 +125,10 @@ fn parse_responses(responses: Vec<TaniumResponse>) -> Vec<Computer> {
         }
     }
 
-    return computers
+    let arr = computers.into_iter().filter(|c| unique_computers.insert(c.serial_number.clone())).collect();
+
+    //return computers
+    return arr;
 }
 
 pub fn get_computers() -> Vec<Computer> {
@@ -132,3 +136,5 @@ pub fn get_computers() -> Vec<Computer> {
     let computers = parse_responses(responses);
     return computers
 }
+
+

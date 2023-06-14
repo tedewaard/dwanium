@@ -87,7 +87,7 @@ pub fn map_to_serial_and_enddate(dell_result: DellResult) -> Vec<(String,String)
     for object in dell_result {
         //Going to skip objects that don't have entitlements and therefor no end data
         if object.entitlements.is_some() { 
-            //Some computers have multiple entitlements. We are grabbing the latest date.
+            //Some computers have multiple entitlements. We are grabbing the date furthest out. 
             let entitlements = object.entitlements.expect("No Dell entitlements for object.");
             let mut dates = Vec::new();
             for entitlement in entitlements {
