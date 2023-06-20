@@ -1,0 +1,5 @@
+## Speed Increases ##
+### Initial DB Write ###
+The initial write of serial number and name used to take 118.9 seconds. After 
+moving to SQLx and utilizing the query builder it completes in 14.68 seconds 
+(limiting to 100 rows being inserted at a time).

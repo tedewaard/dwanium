@@ -1,5 +1,5 @@
 use dell::{dell_api_query, map_to_serial_and_enddate};
-use database::{query_serialnum, update_computer_db, mass_add_computers_db, add_computers_db};
+use database::{sqlx_bulk_add_test_entrys, sqlx_add_test_entrys, query_serialnum, update_computer_db, mass_add_computers_db, add_computers_db};
 use tanium::get_computers;
 use dotenv::dotenv;
 use std::time::*;
@@ -12,18 +12,29 @@ mod dell;
 
 
 //Was working on setting up concurrency for adding computers to DB
-fn main() {
+#[tokio::main]
+async fn main() {
     let before = Instant::now();
     //Load environment variables
     dotenv().ok();
 
     //Querying Tanium for all Dell Endpoints and add to DB
     println!("Querying Tanium...");
-    let computers = get_computers();
+    let computers = get_computers().await;
     println!("Elapsed Time: {:.2?}", before.elapsed());
 
+
     println!("Adding computers to db...");
-    add_computers_db(computers);
+    //sqlx_mass_add_test_entrys().await;
+    let mut temp_computers = Vec::new();
+    for (idx, computer) in computers.iter().enumerate() {
+        if temp_computers.len() == 100 || idx == computers.len()-1 {
+            //mass_add_computers_db(temp_computers);
+            sqlx_bulk_add_test_entrys(temp_computers).await;
+            temp_computers = Vec::new();
+        }
+        temp_computers.push(computer.clone());
+    }
     println!("Elapsed Time: {:.2?}", before.elapsed());
 
     /*

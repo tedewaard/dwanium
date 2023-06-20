@@ -49,7 +49,6 @@ pub struct Computer {
 }
 
 
-#[tokio::main]
 async fn tanium_api_call(query: String) -> Result<TaniumResponse, Error> {
     //dotenv().ok();
     let token = dotenv::var("TOKEN").expect("There was an issue reading the tanium token env variable.");
@@ -81,13 +80,13 @@ fn format_query(end_cursor: String) -> String {
 }
 
 
-fn get_pages() -> Vec<TaniumResponse>{
+async fn get_pages() -> Vec<TaniumResponse>{
     let mut all_responses: Vec<TaniumResponse> = Vec::new();
     let base_query: String = r#"{
     "query": "{ endpoints (first: 1000, filter: {path: \"manufacturer\", op: CONTAINS, value: \"Dell\" }) { edges { node { id serialNumber name model manufacturer } } pageInfo { hasNextPage endCursor } }}" 
     }"#.to_string();
 
-    let base_call = tanium_api_call(base_query.to_string());
+    let base_call = tanium_api_call(base_query.to_string()).await;
     let base_result = match base_call {
         Ok(r) => r,
         Err(error) => panic!("Problem with the Tanium API response. Check that the API token is valid: {}", error)
@@ -101,7 +100,7 @@ fn get_pages() -> Vec<TaniumResponse>{
 
     while *next_page {
         let query = format_query(end_cursor.clone());
-        match tanium_api_call(query.clone()) {
+        match tanium_api_call(query.clone()).await {
             Ok(r) => {
                 all_responses.push(r);
                 end_cursor = &all_responses.last().unwrap().data.endpoints.page_info.end_cursor;
@@ -115,24 +114,26 @@ fn get_pages() -> Vec<TaniumResponse>{
 
 }
 
+//TODO: Can start with HashSet and avoid the first array
 fn parse_responses(responses: Vec<TaniumResponse>) -> Vec<Computer> {
     let mut computers: Vec<Computer> = Vec::new(); 
     let mut unique_computers = HashSet::new();
     for response in responses {
         for edges in response.data.endpoints.edges {
-            let comp = Computer {name: edges.node.name, serial_number: edges.node.serial_number};
-            computers.push(comp);
+            if edges.node.serial_number.len() == 7 {
+                let comp = Computer {name: edges.node.name, serial_number: edges.node.serial_number};
+                computers.push(comp);
+            }
         }
     }
 
     let arr = computers.into_iter().filter(|c| unique_computers.insert(c.serial_number.clone())).collect();
 
-    //return computers
     return arr;
 }
 
-pub fn get_computers() -> Vec<Computer> {
-    let responses = get_pages();
+pub async fn get_computers() -> Vec<Computer> {
+    let responses = get_pages().await;
     let computers = parse_responses(responses);
     return computers
 }
