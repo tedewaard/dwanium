@@ -49,7 +49,6 @@ async fn get_dell_bearer_token() -> Result<BearerToken, Error> {
 }
 
 
-#[tokio::main]
 pub async fn dell_api_query(serial_number: Vec<String>) -> Result<DellResult, Error>{
 
     let mut query_string = "servicetags=".to_string();
