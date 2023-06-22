@@ -109,3 +109,4 @@ pub fn map_to_serial_and_enddate(dell_result: DellResult) -> Vec<(String,String)
     }
     return computers;
 }
+

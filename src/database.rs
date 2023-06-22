@@ -76,7 +76,7 @@ pub async fn update_computer_db(computers: Vec<(String, String)>) {
 
 async fn update_record(client: &mut PgConnection, serial: String, end_date: String) {
     let query = "UPDATE computers SET end_date = $1 WHERE serial = $2";
-    let execute = sqlx::query(query)
+    sqlx::query(query)
         .bind(end_date)
         .bind(serial)
         .execute(client)

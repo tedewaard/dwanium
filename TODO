@@ -1,8 +1,6 @@
 I can query dell faster by dividing the PCs in half and then creating a thread
 for each.
 
-Surpress the database dublicate message or send it to log
-
 Proper logging
 
 Run on a schedule that can check for new PCs
@@ -17,6 +15,3 @@ How do I actually want to host this? Check into different AWS options.
 Need to setup docker file for DB config
 
 Implement tests
-
-Check for duplicates before inserting into Database. Then I should be able to do 
-larger sql updates instead of one at a time

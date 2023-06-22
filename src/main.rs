@@ -36,20 +36,33 @@ async fn main() {
     println!("Elapsed Time: {:.2?}", before.elapsed());
     //Reading from DB and querying Dell
     println!("Querying serial nums from db");
-    let serial_nums = query_serialnum().await;
-    let mut temp_serial = Vec::new();
+
+    let mut serial_nums1 = query_serialnum().await;
+    let serial_half = serial_nums1.len()/2;
+    let serial_nums2 = serial_nums1.split_off(serial_half);
     println!("Querying Dell...");
+    let task1 = tokio::spawn(async {
+        chunck_dell_query(serial_nums1).await;
+    });
+    let task2 = tokio::spawn(async {
+        chunck_dell_query(serial_nums2).await;
+    });
+    let _ = tokio::try_join!(task1, task2);
+    println!("Elapsed Time: {:.2?}", before.elapsed());
+}
+
+async fn chunck_dell_query(serial_nums: Vec<String>) {
+    let mut temp_serial = Vec::new();
     for (idx, serial) in serial_nums.iter().enumerate() {
         if temp_serial.len() == 100 || idx == serial_nums.len()-1 {
             let dell_api_results = dell_api_query(temp_serial).await.unwrap();
-            println!("Elapsed Time (api): {:.2?}", before.elapsed());
+            //println!("Elapsed Time (api): {:.2?}", before.elapsed());
             //println!("{:?}", dell_api_results);
             let updates = map_to_serial_and_enddate(dell_api_results);
             update_computer_db(updates).await;
-            println!("Elapsed Time (db): {:.2?}", before.elapsed());
+            //println!("Elapsed Time (db): {:.2?}", before.elapsed());
             temp_serial = Vec::new();
         }
         temp_serial.push(serial.to_string());
     }
-    println!("Elapsed Time: {:.2?}", before.elapsed());
 }
