@@ -4,11 +4,10 @@ use sqlx::{QueryBuilder, Postgres};
 use crate::tanium::Computer;
 use sqlx::PgConnection;
 use sqlx::Connection;
-use sqlx::postgres::PgRow;
 
 //SQLX 
 async fn setup_sqlx_connection() -> Result<PgConnection, sqlx::Error> {
-    let conn = PgConnection::connect("postgresql://localhost?dbname=dwanium&user=tedewaard&password=test-password").await?;
+    let conn = PgConnection::connect("postgresql://localhost?dbname=Dwanium&user=postgres&password=password").await?;
     Ok(conn)
 }
 
