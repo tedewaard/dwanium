@@ -12,7 +12,6 @@ mod database;
 mod dell;
 
 
-//Was working on setting up concurrency for adding computers to DB
 #[tokio::main]
 async fn main() {
     let before = Instant::now();

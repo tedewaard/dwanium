@@ -4,11 +4,6 @@ Run on a schedule that can check for new PCs
     Adds PCs into DB and then could check if the DB is missing any end dates
     Then query Dell for just those PCs
 
-Could use flags when running to say whether it's first full run or incremental
-Or could check for that first in the main loop and see if there is data in the db.
-
 How do I actually want to host this? Check into different AWS options.
 
 Need to setup docker file for DB config
-
-Implement tests
