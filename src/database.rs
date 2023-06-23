@@ -49,12 +49,28 @@ async fn sqlx_add_test_entrys() {
 
 }
 */
-
-pub async fn query_serialnum() -> Vec<String>{
+pub async fn query_all_serialnum() -> Vec<String>{
     let mut serial_numbers = Vec::new();
     let mut client = setup_sqlx_connection().await.unwrap();
 
     let query = "SELECT serial FROM computers";
+    let rows = sqlx::query(query)
+        .fetch_all(&mut client)
+        .await
+        .unwrap();
+
+    for row in rows {
+        //println!("{:?}", row.get::<String, _>(0));
+        serial_numbers.push(row.get::<String, _>(0));
+    }
+    return serial_numbers;
+}
+
+pub async fn query_serialnum_missing_date() -> Vec<String>{
+    let mut serial_numbers = Vec::new();
+    let mut client = setup_sqlx_connection().await.unwrap();
+
+    let query = "SELECT serial FROM computers WHERE end_date IS NULL";
     let rows = sqlx::query(query)
         .fetch_all(&mut client)
         .await

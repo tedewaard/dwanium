@@ -1,4 +1,3 @@
-
 use serde::Deserialize;
 use reqwest::{self, ClientBuilder, Error, header::{CONTENT_TYPE, AUTHORIZATION}};
 use chrono::DateTime;
@@ -14,16 +13,16 @@ pub type DellResult = Vec<DellObject>;
 pub struct DellObject {
     #[serde(alias="serviceTag")]
     service_tag: String,
-    #[serde(alias="shipDate")]
-    ship_date: Option<String>,
+    //#[serde(alias="shipDate")]
+    //ship_date: Option<String>,
     entitlements: Option<Vec<DellEntitlements>>,
 }
 
 //There is a serviceLevelDescription field that I'm not grabbbing but describest the warranty
 #[derive(Deserialize, Debug)]
 pub struct DellEntitlements {
-    #[serde(alias="startDate")]
-    start_date: String,
+    //#[serde(alias="startDate")]
+    //start_date: String,
     #[serde(alias="endDate")]
     end_date: String,
 }
