@@ -7,7 +7,7 @@ use sqlx::Connection;
 
 //SQLX 
 async fn setup_sqlx_connection() -> Result<PgConnection, sqlx::Error> {
-    let conn = PgConnection::connect("postgresql://localhost?dbname=Dwanium&user=postgres&password=password").await?;
+    let conn = PgConnection::connect("postgresql://postgres-dwanium?dbname=Dwanium&user=postgres&password=password").await?;
     Ok(conn)
 }
 
