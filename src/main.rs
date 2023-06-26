@@ -1,9 +1,10 @@
 use dell::{dell_api_query, map_to_serial_and_enddate};
-use database::{query_serialnum_missing_date, query_all_serialnum, bulk_add_serial_name, update_computer_db};
-use tanium::{get_computers, Computer};
+use database::{query_all_serialnum_enddate, query_serialnum_missing_date, query_all_serialnum, bulk_add_serial_name, update_computer_db};
+use tanium::{format_import_query, get_computers, Computer};
 use dotenv::dotenv;
 use std::time::*;
 use std::collections::HashSet;
+use tokio::time::{sleep, Duration};
 
 
 
@@ -14,27 +15,45 @@ mod dell;
 
 #[tokio::main]
 async fn main() {
-    let before = Instant::now();
-    //Load environment variables
-    dotenv().ok();
-    //Querying Tanium for all Dell Endpoints and add to DB if missing
-    println!("Querying Tanium...");
-    add_missing_records().await;
-    println!("Elapsed Time: {:.2?}", before.elapsed());
+    let import_data = query_all_serialnum_enddate().await;
+   format_import_query(import_data[..10].to_vec());
 
-    //Reading from DB and querying Dell
-    println!("Querying serial nums from db");
-    let mut serial_nums1 = query_serialnum_missing_date().await;
-    let serial_nums2 = serial_nums1.split_off(serial_nums1.len()/2);
-    println!("Querying Dell...");
-    let task1 = tokio::spawn(async {
-        chunck_dell_query(serial_nums1).await;
-    });
-    let task2 = tokio::spawn(async {
-        chunck_dell_query(serial_nums2).await;
-    });
-    let _ = tokio::try_join!(task1, task2);
-    println!("Elapsed Time: {:.2?}", before.elapsed());
+    /*
+    loop {
+        let before = Instant::now();
+        //Load environment variables
+        dotenv().ok();
+        //Querying Tanium for all Dell Endpoints and add to DB if missing
+        println!("Querying Tanium...");
+        add_missing_records().await;
+        println!("Elapsed Time: {:.2?}", before.elapsed());
+
+        //Reading from DB and querying Dell
+        println!("Querying serial nums from db");
+        let mut serial_nums1 = query_serialnum_missing_date().await;
+        if serial_nums1.len() > 100 {
+            let serial_nums2 = serial_nums1.split_off(serial_nums1.len()/2);
+            println!("Querying Dell...");
+            let task1 = tokio::spawn(async {
+                chunck_dell_query(serial_nums1).await;
+            });
+            let task2 = tokio::spawn(async {
+                chunck_dell_query(serial_nums2).await;
+            });
+            let _ = tokio::try_join!(task1, task2);
+        } else {
+            println!("Querying Dell...");
+            let task1 = tokio::spawn(async {
+                chunck_dell_query(serial_nums1).await;
+            });
+            let _ = task1.await;
+        }
+        println!("Elapsed Time: {:.2?}", before.elapsed());
+        println!("Waiting for next run.");
+        
+        sleep(Duration::from_secs(1800)).await;
+    }
+    */
 }
 
 async fn chunck_dell_query(serial_nums: Vec<String>) {

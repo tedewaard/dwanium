@@ -7,7 +7,7 @@ use sqlx::Connection;
 
 //SQLX 
 async fn setup_sqlx_connection() -> Result<PgConnection, sqlx::Error> {
-    let conn = PgConnection::connect("postgresql://postgres-dwanium?dbname=Dwanium&user=postgres&password=password").await?;
+    let conn = PgConnection::connect("postgresql://localhost?dbname=Dwanium&user=postgres&password=password").await?;
     Ok(conn)
 }
 
@@ -61,6 +61,28 @@ pub async fn query_all_serialnum() -> Vec<String>{
         serial_numbers.push(row.get::<String, _>(0));
     }
     return serial_numbers;
+}
+
+//Should I be returning a type instead of a tuple?
+pub async fn query_all_serialnum_enddate() -> Vec<(String, String)>{
+    let mut serial_date = Vec::new();
+    let mut client = setup_sqlx_connection().await.unwrap();
+
+    let query = "SELECT serial, end_date FROM computers WHERE end_date IS NOT NULL";
+    let rows = sqlx::query(query)
+        .fetch_all(&mut client)
+        .await
+        .unwrap();
+
+    for row in rows {
+        //println!("{:?}", row.get::<String, _>(0));
+        //println!("{:?}", row.get::<String, _>(1));
+        let serial = row.get::<String, _>(0);
+        let end_date = row.get::<String, _>(1);
+        serial_date.push((serial, end_date));
+    }
+    //println!("{:?}", serial_date);
+    return serial_date;
 }
 
 pub async fn query_serialnum_missing_date() -> Vec<String>{

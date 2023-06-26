@@ -69,7 +69,7 @@ async fn tanium_api_call(query: String) -> Result<TaniumResponse, Error> {
     Ok(tanium_response)
 }
 
-fn format_query(end_cursor: String) -> String {
+fn format_request_query(end_cursor: String) -> String {
     let query_start: &str = r#"{
     "query": "{ endpoints (first: 1000, "#;
     let query_end: &str = r#"filter: {path: \"manufacturer\", op: CONTAINS, value: \"Dell\" }) { edges { node { id serialNumber name model manufacturer } } pageInfo { hasNextPage endCursor } }}"
@@ -99,7 +99,7 @@ async fn get_pages() -> Vec<TaniumResponse>{
     let mut next_page = &all_responses[0].data.endpoints.page_info.has_next_page;
 
     while *next_page {
-        let query = format_query(end_cursor.clone());
+        let query = format_request_query(end_cursor.clone());
         match tanium_api_call(query.clone()).await {
             Ok(r) => {
                 all_responses.push(r);
@@ -138,4 +138,31 @@ pub async fn get_computers() -> Vec<Computer> {
     return computers
 }
 
+//This will handle pushing the enddates to tanium asset
+pub fn push_end_date_to_tanium() {
+    let test_query: String = r#"{
+    "query": "{ endpoints (first: 1000, filter: {path: \"manufacturer\", op: CONTAINS, value: \"Dell\" }) { edges { node { id serialNumber name model manufacturer } } pageInfo { hasNextPage endCursor } }}" 
+    }"#.to_string();
+    let response = tanium_api_call(test_query);
+}
 
+//Create a json list of serial and end date
+//"json": "[{\"serial\": \"BTCHNN3\", \"end_date\": \"2023-06-09\"}]"
+pub fn format_import_query(records: Vec<(String, String)>) {
+    let mut list: String = String::new();
+    let base: String = r#"{"json": "["#.to_string();
+
+    for record in records {
+        let s = format!(
+            r#"{{\"serial\": \"{}\", \"end_date\": \"{}\"}}"#,
+            record.0, record.1
+            ); 
+
+        //println!("{}", s);
+        list = format!("{}, {}", list, s);
+
+    }
+    
+    let formated_query = format!("{}{}]", base, list);
+    println!("{}", formated_query);
+}
