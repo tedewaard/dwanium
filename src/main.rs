@@ -1,6 +1,6 @@
 use dell::{dell_api_query, map_to_serial_and_enddate};
 use database::{query_all_serialnum_enddate, query_serialnum_missing_date, query_all_serialnum, bulk_add_serial_name, update_computer_db};
-use tanium::{format_import_query, get_computers, Computer};
+use tanium::{format_import_query, get_computers, Computer, push_end_date_to_tanium};
 use dotenv::dotenv;
 use std::time::*;
 use std::collections::HashSet;
@@ -15,10 +15,6 @@ mod dell;
 
 #[tokio::main]
 async fn main() {
-    let import_data = query_all_serialnum_enddate().await;
-   format_import_query(import_data[..10].to_vec());
-
-    /*
     loop {
         let before = Instant::now();
         //Load environment variables
@@ -49,11 +45,18 @@ async fn main() {
             let _ = task1.await;
         }
         println!("Elapsed Time: {:.2?}", before.elapsed());
+        println!("Writing warranty end dates to Tanium...");
+        let mut import_data = query_all_serialnum_enddate().await;
+        if import_data.len() > 5000 {
+            let import_data2 = import_data.split_off(5000);
+            push_end_date_to_tanium(import_data2).await;
+        }
+        push_end_date_to_tanium(import_data).await;
+
         println!("Waiting for next run.");
         
         sleep(Duration::from_secs(1800)).await;
     }
-    */
 }
 
 async fn chunck_dell_query(serial_nums: Vec<String>) {

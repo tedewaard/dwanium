@@ -49,6 +49,27 @@ pub struct Computer {
 }
 
 
+async fn tanium_api_call_mutation(query: String) -> Result<String, Error> {
+    //dotenv().ok();
+    let token = dotenv::var("TOKEN").expect("There was an issue reading the tanium token env variable.");
+    let base_url = "https://hm-api.cloud.tanium.com/plugin/products/gateway/graphql".to_string();
+    let client = ClientBuilder::new().build().unwrap();
+    let response = client
+        .post(base_url)
+        .header(CONTENT_TYPE, "application/json")
+        .header("session", token)
+        .body(query)
+        //.build()?;
+        .send()
+        .await?;
+
+    //println!("{:?}", response.body().unwrap());
+    let body = response.text().await?;
+
+    //Ok("Test".to_string())
+    Ok(body)
+}
+
 async fn tanium_api_call(query: String) -> Result<TaniumResponse, Error> {
     //dotenv().ok();
     let token = dotenv::var("TOKEN").expect("There was an issue reading the tanium token env variable.");
@@ -65,6 +86,7 @@ async fn tanium_api_call(query: String) -> Result<TaniumResponse, Error> {
     let tanium_response: TaniumResponse = response.json().await?;
 
     //println!("{:?}", tanium_response.data.endpoints.edges);
+
 
     Ok(tanium_response)
 }
@@ -139,30 +161,34 @@ pub async fn get_computers() -> Vec<Computer> {
 }
 
 //This will handle pushing the enddates to tanium asset
-pub fn push_end_date_to_tanium() {
-    let test_query: String = r#"{
-    "query": "{ endpoints (first: 1000, filter: {path: \"manufacturer\", op: CONTAINS, value: \"Dell\" }) { edges { node { id serialNumber name model manufacturer } } pageInfo { hasNextPage endCursor } }}" 
-    }"#.to_string();
-    let response = tanium_api_call(test_query);
+pub async fn push_end_date_to_tanium(records: Vec<(String, String)>) {
+    let base_query: String = r#"{
+        "query": "mutation importAssets($source: String!, $json: String!) {assetsImport(input: {sourceName: $source, json: $json}) {assets {id index status } }}",
+        "variables": {"source": "Test","#.to_string();
+    let query = format_import_query(records);
+    let final_query = format!("{}{}}}}}", base_query, query);
+    let response = tanium_api_call_mutation(final_query).await;
+    match response {
+        Err(error) => println!("Error writing dell warranty end dates to Tanium. {}", error),
+        _ => () 
+    }
+    //println!("{}", response);
 }
 
 //Create a json list of serial and end date
 //"json": "[{\"serial\": \"BTCHNN3\", \"end_date\": \"2023-06-09\"}]"
-pub fn format_import_query(records: Vec<(String, String)>) {
-    let mut list: String = String::new();
-    let base: String = r#"{"json": "["#.to_string();
+pub fn format_import_query(records: Vec<(String, String)>) -> String {
+    let base: String = r#""json": "["#.to_string();
+    let mut v = Vec::new();
 
     for record in records {
         let s = format!(
             r#"{{\"serial\": \"{}\", \"end_date\": \"{}\"}}"#,
             record.0, record.1
             ); 
-
-        //println!("{}", s);
-        list = format!("{}, {}", list, s);
-
+        v.push(s);
     }
     
-    let formated_query = format!("{}{}]", base, list);
-    println!("{}", formated_query);
+    let formated_query = format!("{}{}]\"", base, v.join(","));
+    return formated_query;
 }
