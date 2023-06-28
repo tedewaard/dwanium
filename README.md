@@ -1,4 +1,7 @@
-# dwanium
+# Dwanium
+Dwanium is a service that queries the Tanium API to gather all the Dell machines. It then takes the serial 
+numbers and queries the Dell Warranty API to get the warranty information on each PC. After that it grabs the warranty 
+end date and sends it back to Tanium Asset. This allows you to see in Tanium when your Dell PCs are out of warranty.
 
 ### Setup Environment
 - Create an API key in Tanium
