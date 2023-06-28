@@ -164,7 +164,7 @@ pub async fn get_computers() -> Vec<Computer> {
 pub async fn push_end_date_to_tanium(records: Vec<(String, String)>) {
     let base_query: String = r#"{
         "query": "mutation importAssets($source: String!, $json: String!) {assetsImport(input: {sourceName: $source, json: $json}) {assets {id index status } }}",
-        "variables": {"source": "Test","#.to_string();
+        "variables": {"source": "Dell Warranty End Date","#.to_string();
     let query = format_import_query(records);
     let final_query = format!("{}{}}}}}", base_query, query);
     let response = tanium_api_call_mutation(final_query).await;
@@ -172,11 +172,8 @@ pub async fn push_end_date_to_tanium(records: Vec<(String, String)>) {
         Err(error) => println!("Error writing dell warranty end dates to Tanium. {}", error),
         _ => () 
     }
-    //println!("{}", response);
 }
 
-//Create a json list of serial and end date
-//"json": "[{\"serial\": \"BTCHNN3\", \"end_date\": \"2023-06-09\"}]"
 pub fn format_import_query(records: Vec<(String, String)>) -> String {
     let base: String = r#""json": "["#.to_string();
     let mut v = Vec::new();

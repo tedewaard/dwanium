@@ -1,6 +1,6 @@
 use dell::{dell_api_query, map_to_serial_and_enddate};
 use database::{query_all_serialnum_enddate, query_serialnum_missing_date, query_all_serialnum, bulk_add_serial_name, update_computer_db};
-use tanium::{format_import_query, get_computers, Computer, push_end_date_to_tanium};
+use tanium::{get_computers, Computer, push_end_date_to_tanium};
 use dotenv::dotenv;
 use std::time::*;
 use std::collections::HashSet;
