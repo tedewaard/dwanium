@@ -48,11 +48,17 @@ pub struct Computer {
     pub serial_number: String,
 }
 
+fn get_base_url() -> String {
+    let target = dotenv::var("API_TARGET").expect("There was an issue reading the tanium API_Target env variable.");
+    let base_url = format!("https://{}-api.cloud.tanium.com/plugin/products/gateway/graphql", target);
+    return base_url;
+}
+
 
 async fn tanium_api_call_mutation(query: String) -> Result<String, Error> {
     //dotenv().ok();
     let token = dotenv::var("TOKEN").expect("There was an issue reading the tanium token env variable.");
-    let base_url = "https://hm-api.cloud.tanium.com/plugin/products/gateway/graphql".to_string();
+    let base_url = get_base_url();
     let client = ClientBuilder::new().build().unwrap();
     let response = client
         .post(base_url)
@@ -73,7 +79,7 @@ async fn tanium_api_call_mutation(query: String) -> Result<String, Error> {
 async fn tanium_api_call(query: String) -> Result<TaniumResponse, Error> {
     //dotenv().ok();
     let token = dotenv::var("TOKEN").expect("There was an issue reading the tanium token env variable.");
-    let base_url = "https://hm-api.cloud.tanium.com/plugin/products/gateway/graphql".to_string();
+    let base_url = get_base_url();
     let client = ClientBuilder::new().build().unwrap();
     let response = client
         .post(base_url)

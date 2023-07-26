@@ -29,9 +29,10 @@ end date and sends it back to Tanium Asset. This allows you to see in Tanium whe
 
 #### Create a .env file at the root of the project and add the following to include your Tanium API token, Dell ID and your Dell Secret key.  
 ```
-`TOKEN=<Add Token Here>`  
-`DELL_ID=<Add Dell ID Here>`  
-`DELL_SECRET=<Add Dell Secret Key Here`
+TOKEN=<Add Token Here>  
+DELL_ID=<Add Dell ID Here>
+DELL_SECRET=<Add Dell Secret Key Here>
+API_TARGET=<Enter your Tanium sub domain. Ex: contoso if your tenant is https://contoso.cloud.tanium.com>
 ```
 ### Run the service
 Run the following docker compose command which will build the docker image for dwanium
